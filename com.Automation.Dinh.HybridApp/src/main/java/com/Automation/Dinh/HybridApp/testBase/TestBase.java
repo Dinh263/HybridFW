@@ -1,12 +1,20 @@
 package com.Automation.Dinh.HybridApp.testBase;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class TestBase {
-	WebDriver driver;
-	
+	public WebDriver driver;
+	public Properties OR;
+	public File file;
+	public FileInputStream inputStr;
 	public void getBrowser(String browser) {
 		System.out.println(System.getProperty("os.name"));
 		if(System.getProperty("os.name").contains("Window")) {
@@ -32,9 +40,24 @@ public class TestBase {
 			}
 		}
 	}
+	public void loadPropertiesFile() throws IOException {
+		OR = new Properties();
+		file= new File(System.getProperty("user.dir")+"/src/main/java/com/Automation/Dinh/HybridApp/config/config.properties");
+		inputStr = new FileInputStream(file);
+		OR.load(inputStr);
+		
+		file= new File(System.getProperty("user.dir")+"/src/main/java/com/Automation/Dinh/HybridApp/config/or.properties");
+		inputStr = new FileInputStream(file);
+		OR.load(inputStr);
+	}
+	public void getPropertiesData() {
+		
+	}
 	
-	public static void main(String[]args) {
+	public static void main(String[]args) throws IOException {
 		TestBase test = new TestBase();
-		test.getBrowser("firefox");
+		test.loadPropertiesFile();
+		System.out.println(test.OR.getProperty("testname"));
+		
 	}
 }
