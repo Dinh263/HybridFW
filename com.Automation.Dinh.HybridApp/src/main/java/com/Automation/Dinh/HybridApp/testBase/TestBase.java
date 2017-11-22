@@ -17,6 +17,14 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+
+import com.relevantcodes.extentreports.ExtentReports;
+import com.relevantcodes.extentreports.ExtentTest;
+import com.relevantcodes.extentreports.LogStatus;
 
 
 
@@ -25,6 +33,16 @@ public class TestBase {
 	public Properties OR;
 	public File file;
 	public FileInputStream inputStr;
+	public static ExtentReports extent;
+	public static ExtentTest test;
+	public ITestResult result;
+	
+	static {
+		Calendar calendar = Calendar.getInstance();
+		SimpleDateFormat formater = new SimpleDateFormat("dd_MM_yyyy_hh_mm_ss");
+		extent = new ExtentReports(System.getProperty("user.dir")+"/src/main/java/com/Automation/Dinh/HybridApp/report/test"+formater.format(calendar.getTime())+".html",false);
+	}
+	
 	public void getBrowser(String browser) {
 		System.out.println(System.getProperty("os.name"));
 		if(System.getProperty("os.name").contains("Window")) {
@@ -66,7 +84,7 @@ public class TestBase {
 		wait.until(ExpectedConditions.elementToBeClickable(element));
 	}
 	
-	public void getScreenShot(String imageName) throws IOException {
+	public String getScreenShot(String imageName) throws IOException {
 		if(imageName.equals("")) {
 			imageName="_blank";
 		}
@@ -77,7 +95,7 @@ public class TestBase {
 		String actualImageName = imageLocation+ imageName +"_"+formater.format(calender.getTime())+".png"; 
 		File destFile = new File(actualImageName);
 		FileUtils.copyDirectory(fileScreenshot, destFile);
-		
+		return actualImageName;
 	}
 	public void getPropertiesData() {
 		
@@ -88,5 +106,43 @@ public class TestBase {
 		test.loadPropertiesFile();
 		System.out.println(test.OR.getProperty("testname"));
 		
+	}
+	
+	public void getResult(ITestResult result) throws IOException {
+		if(result.getStatus() == ITestResult.SUCCESS) {
+			test.log(LogStatus.PASS, " test case is pass");
+		}
+		else if (result.getStatus() == ITestResult.SKIP) {
+			test.log(LogStatus.SKIP, " test case is skipeed and skip reason is : "+result.getThrowable());
+		}
+		else if (result.getStatus() == ITestResult.FAILURE) {
+			test.log(LogStatus.FAIL, " test case is faled and failured reason is : "+result.getThrowable());
+			String screen = getScreenShot("");
+			test.log(LogStatus.FAIL,test.addScreenCapture(screen));
+			
+		}
+		else if (result.getStatus() == ITestResult.STARTED) {
+			test.log(LogStatus.INFO, result.getName()+" test is started");
+		}
+	
+		
+		
+	}
+	@AfterMethod()
+	public void afterMethod(ITestResult result) throws IOException {
+		getResult(result);
+	}
+	
+	@BeforeMethod()
+	public void beforeMethod(ITestResult result) throws IOException {
+		test =extent.startTest(result.getName());
+		test.log(LogStatus.INFO, result.getName()+" test started");
+	}
+	
+	@AfterClass(alwaysRun = true)
+	public void endTest() {
+		driver.quit();
+		extent.endTest(test);
+		extent.flush();
 	}
 }
